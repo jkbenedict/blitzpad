@@ -1,0 +1,28 @@
+#!/bin/bash
+# Bumps the minor version in CMakeLists.txt, builds, runs the tests, and writes
+# ../blitzpad-<major>.<minor>.zip (source, build.sh, and a prebuilt binary).
+# Usage: ./package.sh [build-dir]
+set -e
+cd "$(dirname "$0")"
+BUILD="${1:-build}"
+
+old=$(sed -n 's/^project(blitzpad VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+IFS=. read -r major minor patch <<<"$old"
+new="$major.$((minor + 1)).0"
+sed -i "s/^project(blitzpad VERSION $old/project(blitzpad VERSION $new/" CMakeLists.txt
+echo "Version $old -> $new"
+
+cmake -S . -B "$BUILD" >/dev/null
+cmake --build "$BUILD" -j"$(nproc)"
+ctest --test-dir "$BUILD" --output-on-failure
+
+stage=$(mktemp -d)
+mkdir -p "$stage/blitzpad/prebuilt"
+cp -r CMakeLists.txt README.md CHANGELOG.md build.sh install.sh package.sh .gitignore data docs src tests "$stage/blitzpad/"
+cp "$BUILD/blitzpad" "$stage/blitzpad/prebuilt/" && strip "$stage/blitzpad/prebuilt/blitzpad"
+chmod +x "$stage/blitzpad/build.sh" "$stage/blitzpad/install.sh" "$stage/blitzpad/package.sh" "$stage/blitzpad/prebuilt/blitzpad"
+zip="$(cd .. && pwd)/blitzpad-$major.$((minor + 1)).zip"
+rm -f "$zip"
+(cd "$stage" && python3 -c "import shutil,sys; shutil.make_archive(sys.argv[1][:-4], 'zip', '.', 'blitzpad')" "$zip")
+rm -rf "$stage"
+echo "Wrote $zip"

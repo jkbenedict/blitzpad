@@ -1,0 +1,12 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource prefix="/icons">
+    <file alias="blitzpad-16.png">icons/blitzpad-16.png</file>
+    <file alias="blitzpad-24.png">icons/blitzpad-24.png</file>
+    <file alias="blitzpad-32.png">icons/blitzpad-32.png</file>
+    <file alias="blitzpad-48.png">icons/blitzpad-48.png</file>
+    <file alias="blitzpad-64.png">icons/blitzpad-64.png</file>
+    <file alias="blitzpad-128.png">icons/blitzpad-128.png</file>
+    <file alias="blitzpad-256.png">icons/blitzpad-256.png</file>
+  </qresource>
+</RCC>
