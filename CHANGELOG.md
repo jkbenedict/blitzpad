@@ -5,6 +5,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 versions follow [Semantic Versioning](https://semver.org/). Every release zip bumps
 the minor version (`package.sh` does this automatically).
 
+## [0.11.0] - 2026-11-18
+
+### Fixed
+- **README icon missing on GitHub.** Release zips used to wrap everything in a
+  `blitzpad/` folder, so unzipping into a repository put the README's images one level too
+  deep. Zips now hold the files at the top level, so unzipping into the repository puts
+  `README.md`, `CHANGELOG.md`, `data/` and `docs/` at its root.
+
+### Changed
+- The README header uses the real app icon (`data/icons/blitzpad-256.png`).
+- README: install command for the flat zip (`unzip blitzpad-0.11.zip -d blitzpad`), plus
+  steps for updating the GitHub repository from a release zip.
+
 ## [0.10.0] - 2026-11-18
 
 The beta release. (Version 0.9 was skipped on purpose.)

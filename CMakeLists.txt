@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 # The product version lives here only. package.sh bumps it for every new zip.
-project(blitzpad VERSION 0.10.0 LANGUAGES CXX)
+project(blitzpad VERSION 0.11.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

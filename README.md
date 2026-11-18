@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/screenshots/icon.png" width="112" alt="BlitzPad icon">
+<img src="data/icons/blitzpad-256.png" width="112" alt="BlitzPad icon">
 
 # BlitzPad
 
@@ -8,7 +8,7 @@
 
 *"I was tired of a slow TextEditor, so I worked fast for faster work, later!"*
 
-![Version](https://img.shields.io/badge/version-0.10.0-2b6cf0?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.11.0-2b6cf0?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-BETA-ffb300?style=for-the-badge)
 ![Next](https://img.shields.io/badge/next-1.0%20QA-16328f?style=for-the-badge)
 
@@ -29,7 +29,7 @@
 ---
 
 > [!IMPORTANT]
-> **This is the BlitzPad beta (0.10).** Every feature planned for the first release is in
+> **This is the BlitzPad beta (0.11).** Every feature planned for the first release is in
 > and covered by automated tests on Ubuntu 24.04 / Zorin OS 18. **Next up: a full QA pass
 > across distributions and desktops, then Build 1.0.** See
 > [Beta status & road to 1.0](#-beta-status--road-to-10), and please
@@ -111,7 +111,7 @@ the same editing engine Notepad++ is built on. There's no Electron and no web vi
 ## 🚀 Install
 
 ```sh
-unzip blitzpad-0.10.zip && cd blitzpad
+unzip blitzpad-0.11.zip -d blitzpad && cd blitzpad
 ./install.sh
 ```
 
@@ -208,7 +208,7 @@ Edit it with **Options › Edit preferences.ini**, then **Options › Reload Pre
 
 ## 🧪 Beta status & road to 1.0
 
-**0.10 is feature-complete for the beta.** Every item from the original plan except
+**0.11 is feature-complete for the beta.** Every item from the original plan except
 inactive-tab memory saving is in, and it has automated tests for search and Save Compressed.
 Before calling it **Build 1.0**, BlitzPad goes through a dedicated **QA pass**:
 
@@ -245,6 +245,22 @@ bash package.sh                              # bump version, build, test, zip
 ```
 
 The version lives only in `CMakeLists.txt`. Every change goes in [CHANGELOG.md](CHANGELOG.md).
+
+### Updating the GitHub repository from a release zip
+
+Release zips have no wrapping folder: their contents *are* the repository root.
+
+```sh
+cd ~/path/to/your/blitzpad-repo
+unzip -o ~/Downloads/blitzpad-0.11.zip   # -o overwrites older files
+git add -A
+git commit -m "BlitzPad 0.11"
+git push
+```
+
+Keep `README.md`, `CHANGELOG.md`, `data/` and `docs/` at the top level of the repo.
+The README's icon (`data/icons/`) and screenshots (`docs/screenshots/`) are linked with
+those relative paths.
 
 <div align="center">
 <br>
