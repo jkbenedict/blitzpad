@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=BlitzPad
+GenericName=Text Editor
+Comment=Fast text and code editor
+Exec=blitzpad %F
+TryExec=blitzpad
+Icon=blitzpad
+Terminal=false
+Categories=Utility;TextEditor;
+Keywords=text;editor;code;notepad;
+MimeType=text/plain;text/x-csrc;text/x-chdr;text/x-c++src;text/x-c++hdr;application/x-shellscript;text/javascript;application/json;text/x-python;text/markdown;text/x-makefile;text/x-cmake;application/xml;text/html;text/css;text/x-diff;application/x-yaml;
+StartupNotify=true
+StartupWMClass=blitzpad
