@@ -40,6 +40,8 @@ private:
     void buildAbout();
     void buildOptions();
     void rebuildLanguageMenu();
+    void buildEncodingMenu();
+    void reopenWithEncoding(const QString &id);
     bool createFileFormat(const QString &extension, Editor *forEditor);
     void askAboutUnknownFormat(Editor *ed);
     void applyShortcuts();
@@ -65,6 +67,7 @@ private:
     QLabel *m_posLabel;
     QLabel *m_langLabel;
     QLabel *m_encLabel;
+    QActionGroup *m_encGroup = nullptr;
     QMenu *m_langMenu;
     QActionGroup *m_langGroup;
     QAction *m_wrapAction;

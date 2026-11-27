@@ -1,6 +1,9 @@
 #include "mainwindow.h"
+
+#include <functional>
 #include "editor.h"
 #include "languages.h"
+#include "encodings.h"
 #include "finddialog.h"
 #include "search.h"
 #include "compress.h"
@@ -11,6 +14,7 @@
 
 #include <QAction>
 #include <QActionGroup>
+#include <QPushButton>
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDialog>
@@ -82,13 +86,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     buildOptions();
     applyShortcuts();
 
-    // "X Tabs | Y MEM" on the far right of the menu bar. Refreshed when a tab
+    // "X Tabs | Y MBs" on the far right of the menu bar. Refreshed when a tab
     // opens or closes, and every 60 seconds.
     m_statsLabel = new QLabel(this);
     m_statsLabel->setContentsMargins(8, 0, 10, 0);
     m_statsLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     // The menu bar sizes its corner widget once, so reserve room for big numbers.
-    m_statsLabel->setMinimumWidth(m_statsLabel->fontMetrics().horizontalAdvance("9999 Tabs | 99999 MEM") + 18);
+    m_statsLabel->setMinimumWidth(m_statsLabel->fontMetrics().horizontalAdvance("9999 Tabs | 99999 MBs") + 18);
     menuBar()->setCornerWidget(m_statsLabel, Qt::TopRightCorner);
     m_statsTimer = new QTimer(this);
     m_statsTimer->setInterval(60 * 1000);
@@ -202,6 +206,8 @@ void MainWindow::buildMenus()
         }
     });
 
+    buildEncodingMenu();
+
     m_langMenu = menuBar()->addMenu(tr("&Language"));
     m_langGroup = new QActionGroup(this);
     rebuildLanguageMenu();
@@ -297,6 +303,24 @@ bool MainWindow::saveEditor(Editor *ed, bool forceAsk)
         if (path.isEmpty())
             return false;
     }
+    // Warn before characters are lost to a small code page such as CP437.
+    int lost = 0;
+    (void)ed->contentBytes(&lost);
+    if (lost > 0) {
+        QMessageBox box(QMessageBox::Warning, tr("Save"),
+            (lost == 1 ? tr("1 character in %1 can't be stored in %2. It will be saved as \"?\".")
+                             .arg(ed->displayName(), ed->encodingName())
+                       : tr("%1 characters in %2 can't be stored in %3. They will be saved as \"?\".")
+                             .arg(QString::number(lost), ed->displayName(), ed->encodingName())),
+            QMessageBox::NoButton, this);
+        QPushButton *keep = box.addButton(tr("Save as %1 Anyway").arg(ed->encodingName()), QMessageBox::AcceptRole);
+        QPushButton *utf8 = box.addButton(tr("Save as UTF-8"), QMessageBox::ActionRole);
+        box.addButton(QMessageBox::Cancel);
+        box.setDefaultButton(utf8);
+        box.exec();
+        if (box.clickedButton() == utf8) ed->setEncoding("UTF-8");
+        else if (box.clickedButton() != keep) return false;
+    }
     QString err;
     if (!ed->saveFile(path, &err)) {
         QMessageBox::warning(this, tr("Save"), tr("Cannot save %1:\n%2").arg(path, err));
@@ -313,7 +337,7 @@ bool MainWindow::saveAs() { Editor *e = current(); return e && saveEditor(e, tru
 
 bool MainWindow::maybeSave(Editor *ed)
 {
-    if (!ed->isModified())
+    if (!ed->needsSave())
         return true;
     m_tabs->setCurrentWidget(ed);
     const auto r = QMessageBox::question(this, tr("Unsaved changes"),
@@ -358,7 +382,7 @@ void MainWindow::updateTabTitle(Editor *ed)
 {
     const int i = m_tabs->indexOf(ed);
     if (i < 0) return;
-    m_tabs->setTabText(i, (ed->isModified() ? "*" : "") + ed->displayName());
+    m_tabs->setTabText(i, (ed->needsSave() ? "*" : "") + ed->displayName());
     if (ed == current()) updateWindowTitle();
 }
 
@@ -367,7 +391,7 @@ void MainWindow::updateWindowTitle()
     Editor *e = current();
     if (!e) { setWindowTitle("BlitzPad"); return; }
     const QString name = e->filePath().isEmpty() ? e->displayName() : e->filePath();
-    setWindowTitle((e->isModified() ? "*" : "") + name + " - BlitzPad");
+    setWindowTitle((e->needsSave() ? "*" : "") + name + " - BlitzPad");
 }
 
 void MainWindow::onCurrentTabChanged()
@@ -390,6 +414,8 @@ void MainWindow::updateStatus()
     m_posLabel->setText(tr("Ln %1, Col %2  |  %3 lines").arg(line + 1).arg(col + 1).arg(e->lines()));
     m_langLabel->setText(e->language());
     m_encLabel->setText(e->encodingName() + "  " + e->eolName());
+    for (QAction *a : m_encGroup->actions())
+        if (a->data().toString() == e->encodingName()) a->setChecked(true);
     for (QAction *a : m_langGroup->actions())
         if (a->data().toString() == e->language()) { const QSignalBlocker b(m_langGroup); a->setChecked(true); }
 }
@@ -650,7 +676,7 @@ void MainWindow::updateTabMemStats()
     const int tabs = m_tabs->count();
     const double mb = residentMegabytes();
     const QString mem = mb < 0 ? QStringLiteral("?") : QString::number(qRound(mb));
-    m_statsLabel->setText(tr("%1 %2 | %3 MEM").arg(tabs).arg(tabs == 1 ? tr("Tab") : tr("Tabs")).arg(mem));
+    m_statsLabel->setText(tr("%1 %2 | %3 MBs").arg(tabs).arg(tabs == 1 ? tr("Tab") : tr("Tabs")).arg(mem));
     m_statsLabel->setToolTip(tr("%1 open tab(s). BlitzPad is using %2 MB of RAM.\n"
                                 "Updates when a tab opens or closes, and every 60 seconds.")
                                  .arg(tabs).arg(mb, 0, 'f', 1));
@@ -829,12 +855,12 @@ static QString shortcutKey(const QString &menu, const QString &action)
 void MainWindow::applyShortcuts()
 {
     QSettings &s = Prefs::settings();
-    for (QAction *top : menuBar()->actions()) {
-        QMenu *m = top->menu();
-        if (!m) continue;
+    // Every command in every menu, including those in submenus (Language > Programming > ...).
+    std::function<void(const QString &, QMenu *)> walk = [&](const QString &top, QMenu *m) {
         for (QAction *a : m->actions()) {
-            if (a->isSeparator() || a->menu() || a->text().isEmpty()) continue;
-            const QString key = shortcutKey(top->text(), a->text());
+            if (a->isSeparator() || a->text().isEmpty()) continue;
+            if (a->menu()) { walk(top, a->menu()); continue; }
+            const QString key = shortcutKey(top, a->text());
             if (s.contains(key)) {
                 QList<QKeySequence> seqs;
                 for (const QString &part : s.value(key).toString().split(';', Qt::SkipEmptyParts)) {
@@ -849,7 +875,9 @@ void MainWindow::applyShortcuts()
                 s.setValue(key, parts.join("; "));
             }
         }
-    }
+    };
+    for (QAction *top : menuBar()->actions())
+        if (QMenu *m = top->menu()) walk(top->text(), m);
 }
 
 void MainWindow::reloadPreferences()
@@ -863,23 +891,122 @@ void MainWindow::reloadPreferences()
 
 // ---- Unknown formats and your own file formats ------------------------------
 
+// ---- Encoding menu ----------------------------------------------------------
+
+// Fills `menu` with one submenu per encoding group; `pick` runs with the id.
+static void addEncodingGroups(QMenu *menu, QActionGroup *group, const std::function<void(const QString &)> &pick)
+{
+    for (const QString &g : Encodings::groups()) {
+        QMenu *sub = nullptr;
+        for (const Encodings::Info &i : Encodings::all()) {
+            if (i.group != g) continue;
+            if (!sub) sub = menu->addMenu(QString(g).replace("&", "&&"));
+            QAction *a = sub->addAction(QString(i.display).replace("&", "&&"));
+            a->setData(i.id);
+            if (group) { a->setCheckable(true); group->addAction(a); }
+            const QString id = i.id;
+            QObject::connect(a, &QAction::triggered, menu, [pick, id] { pick(id); });
+        }
+    }
+}
+
+void MainWindow::buildEncodingMenu()
+{
+    QMenu *enc = menuBar()->addMenu(tr("E&ncoding"));
+
+    QMenu *reopen = enc->addMenu(tr("&Reopen with Encoding"));
+    reopen->setToolTipsVisible(true);
+    addEncodingGroups(reopen, nullptr, [this](const QString &id) { reopenWithEncoding(id); });
+
+    QMenu *convert = enc->addMenu(tr("&Convert to (used when saving)"));
+    m_encGroup = new QActionGroup(this);
+    addEncodingGroups(convert, m_encGroup, [this](const QString &id) {
+        Editor *e = current();
+        if (!e) return;
+        e->setEncoding(id);
+        updateTabTitle(e);
+        updateStatus();
+        statusBar()->showMessage(tr("%1 will be saved as %2.").arg(e->displayName(), id), 5000);
+    });
+
+    enc->addSeparator();
+    QMenu *fallback = enc->addMenu(tr("&Default for Non-UTF-8 Files"));
+    auto *fbGroup = new QActionGroup(this);
+    addEncodingGroups(fallback, fbGroup, [this](const QString &id) {
+        Prefs::settings().setValue("editor/fallback-encoding", id);
+        Prefs::settings().sync();
+        statusBar()->showMessage(tr("Files that aren't UTF-8 will now open as %1.").arg(id), 5000);
+    });
+    const Encodings::Info *fb = Encodings::find(Prefs::get("editor/fallback-encoding", "ISO-8859-1").toString());
+    for (QAction *a : fbGroup->actions())
+        if (fb && a->data().toString() == fb->id) a->setChecked(true);
+}
+
+void MainWindow::reopenWithEncoding(const QString &id)
+{
+    Editor *e = current();
+    if (!e) return;
+    if (e->filePath().isEmpty()) {
+        // Nothing on disk to re-read: just use the encoding from now on.
+        e->setEncoding(id);
+        updateTabTitle(e);
+        updateStatus();
+        return;
+    }
+    if (e->needsSave()) {
+        const auto r = QMessageBox::question(this, tr("Reopen with Encoding"),
+            tr("%1 has unsaved changes. Discard them and reopen it as %2?").arg(e->displayName(), id),
+            QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Cancel);
+        if (r != QMessageBox::Discard) return;
+    }
+    int line, col;
+    e->getCursorPosition(&line, &col);
+    const int first = e->firstVisibleLine();
+    const QString lang = e->language();
+    QString err;
+    if (!e->loadFile(e->filePath(), &err, id)) {
+        QMessageBox::warning(this, tr("Reopen with Encoding"), tr("Cannot open %1:\n%2").arg(e->filePath(), err));
+        return;
+    }
+    e->setLanguage(lang); // keep a language chosen by hand
+    e->clearUnknownExtension();
+    e->setFirstVisibleLine(first);
+    e->setCursorPosition(line, 0);
+    updateTabTitle(e);
+    updateStatus();
+    statusBar()->showMessage(tr("Reopened %1 as %2.").arg(e->displayName(), id), 5000);
+}
+
 void MainWindow::rebuildLanguageMenu()
 {
     for (QAction *a : m_langGroup->actions()) {
         m_langGroup->removeAction(a);
         delete a;
     }
-    m_langMenu->clear();
-    bool userSection = false;
-    for (const Language &l : Languages::all()) {
-        if (l.userDefined && !userSection) {
-            m_langMenu->addSection(tr("Your formats"));
-            userSection = true;
-        }
-        QAction *a = m_langMenu->addAction(l.name);
+    m_langMenu->clear(); // also deletes the old category submenus
+    auto addLang = [this](QMenu *menu, const Language &l) {
+        QAction *a = menu->addAction(l.name);
         a->setCheckable(true);
         a->setData(l.name);
         m_langGroup->addAction(a);
+    };
+    // Plain Text on top, then one submenu per category, then your own formats.
+    for (const Language &l : Languages::all())
+        if (!l.userDefined && l.category.isEmpty()) addLang(m_langMenu, l);
+    m_langMenu->addSeparator();
+    for (const QString &cat : Languages::categories()) {
+        QMenu *sub = nullptr;
+        for (const Language &l : Languages::all()) {
+            if (l.userDefined || l.category != cat) continue;
+            if (!sub) sub = m_langMenu->addMenu(QString(cat).replace("&", "&&"));
+            addLang(sub, l);
+        }
+    }
+    bool userSection = false;
+    for (const Language &l : Languages::all()) {
+        if (!l.userDefined) continue;
+        if (!userSection) { m_langMenu->addSection(tr("Your formats")); userSection = true; }
+        addLang(m_langMenu, l);
     }
     updateStatus();
 }

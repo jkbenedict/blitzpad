@@ -4,19 +4,23 @@
 #   ./build.sh                interactive: checks packages, builds, tests, offers to install
 #   ./build.sh -y             answer "yes" to every question (unattended)
 #   ./build.sh --no-install   build only; don't offer to install (./install.sh does that)
+#   ./build.sh --skip-deps    don't check packages (./install.sh has already done it)
 #
 # Supported: Zorin OS, Ubuntu, Debian, Linux Mint, Pop!_OS (apt) · Fedora (dnf)
+#            AlmaLinux, Rocky, RHEL, CentOS Stream, Oracle Linux 9+ (dnf + EPEL + CRB)
 #            Arch, Manjaro, EndeavourOS (pacman) · openSUSE (zypper)
 set -euo pipefail
 cd "$(dirname "$0")"
 
 ASSUME_YES=0
 OFFER_INSTALL=1
+CHECK_DEPS=1
 for arg in "$@"; do
     case "$arg" in
         -y|--yes) ASSUME_YES=1 ;;
         --no-install) OFFER_INSTALL=0 ;;
-        -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
+        --skip-deps) CHECK_DEPS=0 ;;
+        -h|--help) sed -n '2,11p' "$0"; exit 0 ;;
         *) echo "Unknown option: $arg"; exit 1 ;;
     esac
 done
@@ -31,83 +35,27 @@ ask() {
     case "${reply:-y}" in [Yy]*) return 0 ;; *) return 1 ;; esac
 }
 
-# ---- 1. Work out the OS and its package manager -----------------------------
-ID=unknown; ID_LIKE=""; PRETTY_NAME=""
-[ -r /etc/os-release ] && . /etc/os-release
-family=""
-for id in $ID ${ID_LIKE:-}; do
-    case "$id" in
-        debian|ubuntu) family=apt; break ;;
-        fedora|rhel|centos) family=dnf; break ;;
-        arch) family=pacman; break ;;
-        opensuse*|suse|sles) family=zypper; break ;;
-    esac
-done
-bold "BlitzPad build on ${PRETTY_NAME:-$ID}"
-
-# Build tools and libraries, then runtime extras: Wayland support, 7-Zip for
-# Save Compressed, monospace fonts with wide Unicode coverage, UTF-8 locales.
-case "$family" in
-  apt)
-    BUILD_PKGS="build-essential cmake qt6-base-dev libqscintilla2-qt6-dev"
-    RUN_PKGS="qt6-wayland p7zip-full fonts-dejavu-core fonts-noto-mono locales"
-    is_installed() { dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"; }
-    install_pkgs() { sudo apt-get update && sudo apt-get install -y "$@"; } ;;
-  dnf)
-    BUILD_PKGS="gcc-c++ make cmake qt6-qtbase-devel qscintilla-qt6-devel"
-    RUN_PKGS="qt6-qtwayland p7zip p7zip-plugins dejavu-sans-mono-fonts google-noto-sans-mono-fonts glibc-langpack-en"
-    is_installed() { rpm -q "$1" >/dev/null 2>&1; }
-    install_pkgs() { sudo dnf install -y "$@"; } ;;
-  pacman)
-    BUILD_PKGS="base-devel cmake qt6-base qscintilla-qt6"
-    RUN_PKGS="qt6-wayland 7zip ttf-dejavu noto-fonts"
-    is_installed() { pacman -Qi "$1" >/dev/null 2>&1; }
-    install_pkgs() { sudo pacman -S --needed --noconfirm "$@"; } ;;
-  zypper)
-    BUILD_PKGS="gcc-c++ make cmake qt6-base-devel qscintilla-qt6-devel"
-    RUN_PKGS="qt6-wayland 7zip dejavu-fonts google-noto-sans-mono-fonts glibc-locale"
-    is_installed() { rpm -q "$1" >/dev/null 2>&1; }
-    install_pkgs() { sudo zypper --non-interactive install "$@"; } ;;
-  *)
-    echo "build.sh doesn't know this Linux. Install these yourself, then run it again:"
-    echo "  a C++17 compiler, CMake 3.16+, Qt 6 Widgets (dev), QScintilla for Qt 6 (dev),"
-    echo "  the Qt 6 Wayland plugin, 7-Zip, DejaVu or Noto monospace fonts, a UTF-8 locale."
-    BUILD_PKGS=""; RUN_PKGS=""
-    is_installed() { return 0; }
-    install_pkgs() { :; } ;;
-esac
-
-# ---- 2. Check for missing packages and offer to install them -----------------
-missing=()
-for p in $BUILD_PKGS $RUN_PKGS; do
-    is_installed "$p" || missing+=("$p")
-done
-if [ ${#missing[@]} -gt 0 ]; then
-    bold "Missing packages: ${missing[*]}"
-    echo "Build tools and Qt/QScintilla are required. The rest add Wayland support,"
-    echo "Save Compressed (7-Zip), good monospace fonts, and UTF-8 locale data."
-    if ask "Install them now with your package manager? (needs your password)"; then
-        install_pkgs "${missing[@]}"
-    else
-        echo "Skipping. The build will fail if a required package is missing."
+# ---- 1-2. Check packages and offer to install the missing ones (deps.sh) ----
+. ./deps.sh
+if [ "$CHECK_DEPS" = 1 ]; then
+    deps_main
+    if [ "$DEPS_OK" = 0 ]; then
+        echo "BlitzPad can't be built until the required packages above are installed."
+        exit 1
     fi
-else
-    echo "All needed packages are already installed."
 fi
 
-# A UTF-8 locale keeps file names and non-English text showing correctly.
-if command -v locale >/dev/null && ! locale -a 2>/dev/null | grep -qiE 'utf-?8'; then
-    bold "No UTF-8 locale is set up on this system."
-    if [ "$family" = apt ] && ask "Generate en_US.UTF-8 now?"; then
-        sudo locale-gen en_US.UTF-8
-    else
-        echo "Set one up with your system's locale settings if text looks wrong."
-    fi
+# No QScintilla package (some AlmaLinux / RHEL releases): build it from source.
+cmake_args=(-DCMAKE_BUILD_TYPE=Release -DQSCINTILLA_SOURCE_DIR=)
+if ! deps_have_system_qsci; then
+    deps_fetch_qscintilla || { echo "BlitzPad needs QScintilla for Qt 6 to build."; exit 1; }
+    echo "Using the QScintilla source in $QSCI_SOURCE_DIR (built into BlitzPad, no extra library)."
+    cmake_args=(-DCMAKE_BUILD_TYPE=Release -DQSCINTILLA_SOURCE_DIR="$QSCI_SOURCE_DIR")
 fi
 
 # ---- 3. Build and test ------------------------------------------------------
 bold "Building..."
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake -S . -B build "${cmake_args[@]}"
 cmake --build build -j"$(nproc)"
 bold "Running tests..."
 ctest --test-dir build --output-on-failure

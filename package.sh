@@ -21,9 +21,9 @@ stage=$(mktemp -d)
 # git repository puts README.md, CHANGELOG.md, docs/ and data/ at the repo
 # root, where GitHub expects them.
 mkdir -p "$stage/prebuilt"
-cp -r CMakeLists.txt README.md CHANGELOG.md build.sh install.sh package.sh .gitignore data docs src tests "$stage/"
+cp -r CMakeLists.txt README.md CHANGELOG.md LICENSE.md MANIFEST.md build.sh install.sh deps.sh package.sh .gitignore data docs packaging src tests tools "$stage/"
 cp "$BUILD/blitzpad" "$stage/prebuilt/" && strip "$stage/prebuilt/blitzpad"
-chmod +x "$stage/build.sh" "$stage/install.sh" "$stage/package.sh" "$stage/prebuilt/blitzpad"
+chmod +x "$stage/build.sh" "$stage/install.sh" "$stage/deps.sh" "$stage/package.sh" "$stage/packaging/build-deb.sh" "$stage/packaging/build-rpm.sh" "$stage/prebuilt/blitzpad"
 zip="$(cd .. && pwd)/blitzpad-$major.$((minor + 1)).zip"
 rm -f "$zip"
 (cd "$stage" && python3 -c "import shutil,sys; shutil.make_archive(sys.argv[1][:-4], 'zip', '.', '.')" "$zip")

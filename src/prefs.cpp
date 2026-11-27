@@ -48,6 +48,8 @@ static const QList<QPair<const char *, QVariant>> &optionDefaults()
         {"editor/highlight-current-line", true},
         {"editor/caret-width", 1},
         {"editor/long-line-marker-column", 0},
+        // Used when a file isn't valid UTF-8 and has no byte-order mark, e.g. CP437.
+        {"editor/fallback-encoding", QStringLiteral("ISO-8859-1")},
         {"view/wordWrap", false},
         {"view/showWhitespace", false},
         {"view/useNativeFileDialogs", false},

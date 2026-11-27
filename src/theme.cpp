@@ -71,6 +71,7 @@ static QString slug(const QString &s)
 {
     QString out = s.toLower();
     out.replace("c++", "cpp");
+    out.replace("c#", "csharp");
     out.replace(QRegularExpression("[^a-z0-9]+"), "-");
     return out.remove(QRegularExpression("^-+|-+$"));
 }

@@ -1,4 +1,5 @@
 #include "editor.h"
+#include "encodings.h"
 #include "languages.h"
 #include "prefs.h"
 #include "theme.h"
@@ -102,7 +103,7 @@ void Editor::setLanguage(const QString &name)
     updateMarginWidth();
 }
 
-bool Editor::loadFile(const QString &path, QString *error)
+bool Editor::loadFile(const QString &path, QString *error, const QString &encoding)
 {
     QFile f(path);
     if (!f.open(QIODevice::ReadOnly)) {
@@ -111,13 +112,18 @@ bool Editor::loadFile(const QString &path, QString *error)
     }
     QByteArray data = f.readAll();
 
-    // Scintilla stores UTF-8 bytes. Valid UTF-8 goes in as-is (no QString
-    // round trip); anything else is treated as Latin-1 and converted.
-    QStringDecoder check(QStringDecoder::Utf8, QStringDecoder::Flag::Stateless);
-    (void)check.decode(data);
-    m_wasLatin1 = check.hasError();
-    if (m_wasLatin1)
-        data = QString::fromLatin1(data).toUtf8();
+    // Scintilla stores UTF-8 bytes. UTF-8 files go in as-is (no conversion);
+    // other encodings are converted, and converted back when saving.
+    // .nfo, .diz and .ans files come from DOS and use CP437 box drawing.
+    static const QStringList dosArt = {"nfo", "diz", "ans"};
+    const QString fallback = dosArt.contains(QFileInfo(path).suffix().toLower())
+        ? QStringLiteral("CP437") : Prefs::get("editor/fallback-encoding", "ISO-8859-1").toString();
+    m_encoding = encoding.isEmpty()
+        ? Encodings::detect(data, fallback)
+        : (Encodings::find(encoding) ? Encodings::find(encoding)->id : QStringLiteral("UTF-8"));
+    m_encodingChanged = false;
+    if (m_encoding != "UTF-8")
+        data = Encodings::toUtf8(data, m_encoding);
 
     // Pick line-ending mode from the first line break.
     const int nl = data.indexOf('\n');
@@ -142,14 +148,19 @@ bool Editor::loadFile(const QString &path, QString *error)
     return true;
 }
 
-QByteArray Editor::contentBytes()
+QByteArray Editor::contentBytes(int *lost)
 {
     const long len = SendScintilla(SCI_GETLENGTH);
     const char *ptr = reinterpret_cast<const char *>(SendScintilla(SCI_GETCHARACTERPOINTER));
-    QByteArray out(ptr, len);
-    if (m_wasLatin1)
-        out = QString::fromUtf8(out).toLatin1();
-    return out;
+    return Encodings::fromUtf8(QByteArray(ptr, len), m_encoding, lost);
+}
+
+void Editor::setEncoding(const QString &id)
+{
+    const Encodings::Info *info = Encodings::find(id);
+    if (!info || info->id == m_encoding) return;
+    m_encoding = info->id;
+    m_encodingChanged = true;
 }
 
 bool Editor::saveFile(const QString &path, QString *error)
@@ -176,6 +187,7 @@ bool Editor::saveFile(const QString &path, QString *error)
         const QString lang = Languages::detect(m_path, QByteArray(ptr, qMin(len, 200L)));
         if (!lang.isEmpty() && lang != m_language) setLanguage(lang);
     }
+    m_encodingChanged = false;
     SendScintilla(SCI_SETSAVEPOINT);
     return true;
 }

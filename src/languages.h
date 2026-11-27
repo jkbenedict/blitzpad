@@ -13,6 +13,7 @@ struct Language {
     QStringList filenames;    // exact basenames, e.g. "Makefile"
     QString lineComment;      // for Toggle Comment; empty if the language has none
     bool userDefined = false; // made with Options > Create File Format
+    QString category;         // Language menu group, e.g. "Programming"
 };
 
 namespace Languages {
@@ -20,6 +21,10 @@ namespace Languages {
 // Built-in languages plus your own formats from ~/.blitzpad/languages.
 const QList<Language> &all();
 const Language *find(const QString &name);
+
+// Language menu groups, in menu order. Plain Text sits above them and your
+// own formats below them.
+QStringList categories();
 
 // Re-reads ~/.blitzpad/languages (after creating or editing a format).
 void reloadUserLanguages();

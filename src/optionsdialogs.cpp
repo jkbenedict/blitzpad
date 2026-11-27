@@ -213,6 +213,28 @@ static QString sampleFor(const QString &lang)
         return "--- a/file.txt\n+++ b/file.txt\n@@ -1,3 +1,3 @@\n context\n-removed line\n+added line\n";
     if (lang == "SQL")
         return "-- comment\nSELECT id, name FROM users WHERE age > 21 AND name = 'x';\n";
+    if (lang == "PHP")
+        return "<?php\n// comment\n$name = \"world\";\nfunction greet(string $who): string {\n    return 'Hi ' . $who . \"!\";\n}\n"
+               "echo greet($name);\n?>\n<p><?= htmlspecialchars($name) ?></p>\n<?php if (true) {\n";
+    if (lang == "Perl" || lang == "Ruby" || lang == "Tcl" || lang == "CoffeeScript")
+        return "# comment\nmy $name = \"world\";\nsub greet { return \"hi $_[0]\"; }\nprint greet($name) if $name =~ /w(or)ld/;\n"
+               "def hello(x)\n  puts \"#{x}\"\nend\n{ unclosed\n";
+    if (lang == "Lua")
+        return "-- comment\nlocal name = \"world\"\nfunction greet(who)\n  return 'hi ' .. who\nend\n"
+               "for i = 1, 3 do print(greet(name), i) end\nlocal t = { 1, 2\n";
+    if (lang == "Go" || lang == "Rust" || lang == "Kotlin" || lang == "Swift" || lang == "Dart" || lang == "Scala"
+        || lang == "Groovy" || lang == "C#" || lang == "D" || lang == "Objective-C" || lang == "TypeScript"
+        || lang == "Protocol Buffers" || lang == "IDL")
+        return "// comment\nimport something\n/* block */\nfunc main() {\n    let s: String = \"text\"\n    var n = 42\n"
+               "    if n > 10 { return }\n}\nclass Broken {   // the { has no }\n";
+    if (lang == "TeX / LaTeX")
+        return "% comment\n\\documentclass{article}\n\\begin{document}\nHello $x^2 + y^2$ \\textbf{world}.\n\\end{document}\n";
+    if (lang == "Batch")
+        return "@echo off\nREM comment\nset NAME=world\nif \"%NAME%\"==\"world\" (\n  echo Hello %NAME%\n)\n";
+    if (lang == "Pascal")
+        return "{ comment }\nprogram Hello;\nvar i: Integer;\nbegin\n  for i := 1 to 3 do\n    WriteLn('Hello ', i);\nend.\n";
+    if (lang == "TOML" || lang == "Dockerfile")
+        return "# comment\n[package]\nname = \"blitzpad\"\nversion = \"0.13.0\"\nFROM debian:stable\nRUN apt-get update\n";
     return "Plain text.\nBraces (like these) and {unclosed ones\n";
 }
 
