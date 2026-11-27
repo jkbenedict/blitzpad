@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 # The product version lives here only. package.sh bumps it for every new zip.
-project(blitzpad VERSION 0.23.0 LANGUAGES CXX)
+project(blitzpad VERSION 0.24.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -64,6 +64,10 @@ add_executable(blitzpad
   src/languages.h
   src/qb64lexer.cpp
   src/qb64lexer.h
+  src/runner.cpp
+  src/runner.h
+  src/rundialogs.cpp
+  src/rundialogs.h
   src/search.cpp
   src/search.h
   src/finddialog.cpp
@@ -127,3 +131,7 @@ add_executable(qb64_test tests/qb64_test.cpp src/qb64lexer.cpp src/qb64lexer.h s
 target_include_directories(qb64_test PRIVATE ${QSCI_INCLUDE_DIR})
 target_link_libraries(qb64_test PRIVATE Qt6::Widgets ${QSCI_LIBRARY})
 add_test(NAME qb64 COMMAND qb64_test)
+add_executable(run_test tests/run_test.cpp src/runner.cpp src/runner.h src/rundialogs.cpp src/rundialogs.h
+               src/prefs.cpp src/prefs.h)
+target_link_libraries(run_test PRIVATE Qt6::Widgets)
+add_test(NAME run COMMAND run_test)

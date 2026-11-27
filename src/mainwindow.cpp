@@ -11,6 +11,8 @@
 #include "theme.h"
 #include "optionsdialogs.h"
 #include "fileformatdialog.h"
+#include "runner.h"
+#include "rundialogs.h"
 
 #include <QAction>
 #include <QActionGroup>
@@ -824,12 +826,115 @@ void MainWindow::buildOptions()
     });
     opt->addAction(tr("Create File &Format..."), this, [this] { createFileFormat(QString(), nullptr); });
     opt->addSeparator();
+    // Run (F5) and its per-language set-up.
+    opt->addAction(tr("&Run"), QKeySequence(Qt::Key_F5), this, &MainWindow::runCurrent);
+    opt->addAction(tr("Run &with..."), this, [this] {
+        configureRunWith(current() ? current()->language() : QStringLiteral("Plain Text"));
+    });
+    opt->addAction(tr("&Automate as..."), this, [this] {
+        configureAutomate(current() ? current()->language() : QStringLiteral("Plain Text"));
+    });
+    opt->addSeparator();
     opt->addAction(tr("&Edit preferences.ini"), this, [this] {
         Prefs::settings().sync();
         openFile(Prefs::filePath());
         statusBar()->showMessage(tr("Edit and save, then use Options > Reload Preferences."), 8000);
     });
     opt->addAction(tr("Re&load Preferences"), this, &MainWindow::reloadPreferences);
+}
+
+// ---- Run (F5) ------------------------------------------------------------------
+
+bool MainWindow::configureRunWith(const QString &language)
+{
+    RunWithDialog dlg(language, this);
+    if (dlg.exec() != QDialog::Accepted) return false;
+    Run::Config c = Run::load(language);
+    if (dlg.removed() || dlg.command().isEmpty()) {
+        c.runWith.clear();
+        if (c.mode == Run::Mode::RunWith || c.mode == Run::Mode::None)
+            c.mode = Run::automateCommands(c.automate, "x").isEmpty() ? Run::Mode::None : Run::Mode::Automate;
+        Run::save(language, c);
+        statusBar()->showMessage(tr("Run with... removed for %1").arg(language), 5000);
+        return false;
+    }
+    c.runWith = dlg.command();
+    c.mode = Run::Mode::RunWith;
+    Run::save(language, c);
+    statusBar()->showMessage(tr("F5 now runs %1 files with: %2").arg(language, c.runWith), 6000);
+    return true;
+}
+
+bool MainWindow::configureAutomate(const QString &language)
+{
+    AutomateDialog dlg(language, this);
+    if (dlg.exec() != QDialog::Accepted) return false;
+    Run::Config c = Run::load(language);
+    c.stopOnError = dlg.stopOnError();
+    if (dlg.removed() || Run::automateCommands(dlg.lines(), "x").isEmpty()) {
+        c.automate.clear();
+        if (c.mode == Run::Mode::Automate || c.mode == Run::Mode::None)
+            c.mode = c.runWith.trimmed().isEmpty() ? Run::Mode::None : Run::Mode::RunWith;
+        Run::save(language, c);
+        statusBar()->showMessage(tr("Automate as... removed for %1").arg(language), 5000);
+        return false;
+    }
+    c.automate = dlg.lines();
+    c.mode = Run::Mode::Automate;
+    Run::save(language, c);
+    statusBar()->showMessage(tr("F5 now runs the Automate as... commands for %1 files").arg(language), 6000);
+    return true;
+}
+
+void MainWindow::runCurrent()
+{
+    Editor *e = current();
+    if (!e) return;
+    const QString language = e->language();
+    Run::Config c = Run::load(language);
+
+    // Nothing set up for this language yet: offer the two ways.
+    if (c.mode == Run::Mode::None) {
+        QMessageBox box(QMessageBox::Question, tr("Run"),
+                        tr("Nothing is set up to run %1 files yet. How should F5 run them?").arg(language),
+                        QMessageBox::NoButton, this);
+        box.setInformativeText(tr("Run with... passes the file to one command and shows its output and "
+                                  "errors in the Error Screen.\nAutomate as... runs a list of commands "
+                                  "(compile, make, copy...) and shows the results in the Info window."));
+        QPushButton *rw = box.addButton(tr("Run &with..."), QMessageBox::AcceptRole);
+        QPushButton *au = box.addButton(tr("&Automate as..."), QMessageBox::ActionRole);
+        box.addButton(QMessageBox::Cancel);
+        box.exec();
+        bool ok = false;
+        if (box.clickedButton() == rw) ok = configureRunWith(language);
+        else if (box.clickedButton() == au) ok = configureAutomate(language);
+        if (!ok) return;
+        c = Run::load(language);
+    }
+
+    // The command runs on the file on disk, so save first: unsaved changes are
+    // saved automatically, and a new file is saved with Save As.
+    if (e->filePath().isEmpty()) {
+        QMessageBox::information(this, tr("Run"), tr("Save the file first, so there is something to run."));
+        if (!saveEditor(e, true)) return;
+    } else if (e->needsSave()) {
+        if (!saveEditor(e, false)) return;
+        statusBar()->showMessage(tr("Saved %1 before running").arg(e->displayName()), 4000);
+    }
+
+    const QString path = e->filePath();
+    const QString dir = QFileInfo(path).absolutePath();
+    QStringList commands;
+    RunWindow::Kind kind;
+    if (c.mode == Run::Mode::RunWith) {
+        commands << Run::runWithCommand(c.runWith, path);
+        kind = RunWindow::ErrorScreen;
+    } else {
+        commands = Run::automateCommands(c.automate, path);
+        kind = RunWindow::Info;
+    }
+    auto *w = new RunWindow(kind, e->displayName(), dir, commands, c.stopOnError, this);
+    w->show();
 }
 
 void MainWindow::reapplyColours()

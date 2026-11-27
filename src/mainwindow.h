@@ -39,6 +39,9 @@ private:
     void buildSearch();
     void buildAbout();
     void buildOptions();
+    void runCurrent();
+    bool configureRunWith(const QString &language);
+    bool configureAutomate(const QString &language);
     void rebuildLanguageMenu();
     void buildEncodingMenu();
     void reopenWithEncoding(const QString &id);

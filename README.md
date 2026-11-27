@@ -8,7 +8,7 @@
 
 *"I was tired of a slow TextEditor, so I worked fast for faster work, later!"*
 
-![Version](https://img.shields.io/badge/version-0.23.0-2b6cf0?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.24.0-2b6cf0?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-BETA-ffb300?style=for-the-badge)
 ![Next](https://img.shields.io/badge/next-1.0%20QA-16328f?style=for-the-badge)
 ![Tested on Zorin OS](https://img.shields.io/badge/tested-Zorin%20OS%2018-15a6f0?style=for-the-badge&logo=zorin&logoColor=white)
@@ -33,7 +33,7 @@
 ---
 
 > [!IMPORTANT]
-> **This is the BlitzPad beta (0.23).** Every feature planned for the first release is in
+> **This is the BlitzPad beta (0.24).** Every feature planned for the first release is in
 > and covered by automated tests. It is tested on **Zorin OS 18** (Debian / Ubuntu family) and
 > **AlmaLinux 9 / 10** (RHEL family), so it has been tested on both Debian-based and
 > RHEL-based systems, with native `.deb` and `.rpm` packages. **Next up: a full QA pass
@@ -102,6 +102,8 @@ the same editing engine Notepad++ is built on. There's no Electron and no web vi
 - **Smart format detection**. For unknown files it asks: plain text, or create a format?
 - **Save Compressed**: ZIP, 7z, GZip, BZip2, TAR, with an AES-256 password for ZIP/7z
 - **"X Tabs | Y MBs"** live counter in the menu bar
+- **Run with F5** (Options › Run): run, compile or automate the current file per language,
+  with results in an Error Screen or Info window (see "Run (F5)" below)
 - One-command install for **just you** or **all users**, with icon and menu entry
 
 </td></tr>
@@ -124,7 +126,7 @@ the same editing engine Notepad++ is built on. There's no Electron and no web vi
 ## 🚀 Install
 
 ```sh
-unzip blitzpad-0.23.zip -d blitzpad && cd blitzpad
+unzip blitzpad-0.24.zip -d blitzpad && cd blitzpad
 ./install.sh
 ```
 
@@ -139,7 +141,7 @@ Linux 9+ use the same steps and are expected to work.
 
 ```sh
 sudo dnf install unzip
-unzip blitzpad-0.23.zip -d blitzpad && cd blitzpad
+unzip blitzpad-0.24.zip -d blitzpad && cd blitzpad
 ./install.sh
 ```
 
@@ -151,8 +153,8 @@ builds QScintilla from source if EPEL doesn't have it.
 
 ```sh
 cd blitzpad                                    # the unzipped release
-bash packaging/build-rpm.sh                    # writes blitzpad-0.23.0-1.el9.x86_64.rpm next to the folder
-sudo dnf install ../blitzpad-0.23.0-1.el9.*.rpm
+bash packaging/build-rpm.sh                    # writes blitzpad-0.24.0-1.el9.x86_64.rpm next to the folder
+sudo dnf install ../blitzpad-0.24.0-1.el9.*.rpm
 ```
 
 `build-rpm.sh` offers to install `rpm-build`, the build tools and the CRB repository with
@@ -212,15 +214,15 @@ Each beta also comes as native packages, which install to `/usr` and pull in the
 dependencies automatically:
 
 ```sh
-sudo apt install ./blitzpad_0.23.0-1_amd64.deb        # Zorin OS 18, Ubuntu 24.04+, Mint 22+, Debian 13
-sudo dnf install ./blitzpad-0.23.0-1.el9.x86_64.rpm   # AlmaLinux / Rocky / RHEL 9
+sudo apt install ./blitzpad_0.24.0-1_amd64.deb        # Zorin OS 18, Ubuntu 24.04+, Mint 22+, Debian 13
+sudo dnf install ./blitzpad-0.24.0-1.el9.x86_64.rpm   # AlmaLinux / Rocky / RHEL 9
 ```
 
 The `.deb` is ready to install. For AlmaLinux, the beta ships the source package
-(`blitzpad-0.23.0-1.src.rpm`): make the installable `.rpm` on your Alma machine with
+(`blitzpad-0.24.0-1.src.rpm`): make the installable `.rpm` on your Alma machine with
 `bash packaging/build-rpm.sh` from the unzipped release. It offers to install `rpm-build`,
 the build tools and the CRB repository with sudo, then writes the `.rpm` next to the
-folder. (`rpmbuild --rebuild blitzpad-0.23.0-1.src.rpm` works too, once the build tools
+folder. (`rpmbuild --rebuild blitzpad-0.24.0-1.src.rpm` works too, once the build tools
 are installed.) `bash packaging/build-deb.sh` makes the `.deb` the same way on Debian /
 Ubuntu / Zorin. Remove them with `sudo apt remove blitzpad` or
 `sudo dnf remove blitzpad`.
@@ -289,10 +291,46 @@ anything missing with sensible defaults.
 | `[editor]` | font, size, tab width, tabs vs spaces, line numbers, folding, brace matching, auto-indent, indent guides, current-line highlight, caret width, long-line marker |
 | `[colours]` | global colours, e.g. `text-bg=#1e1e1e` |
 | `[grammar-<language>]` | per-language colours; `default` means "inherit" |
+| `[run-<language>]` | what F5 does for that language: `mode`, `run-with`, `automate`, `automate-stop-on-error` |
 | `[shortcuts]` | one line per menu command, e.g. `file.save-compressed=Ctrl+Shift+K` |
 | `[view]` · `[file-types]` · `[window]` · `[compress]` | view toggles, plain-text extensions, window size, last archive format |
 
 Edit it with **Options › Edit preferences.ini**, then **Options › Reload Preferences**.
+
+## ▶️ Run (F5)
+
+**Options › Run** (or **F5**) runs the file you're editing. What it runs is set up once per
+language, in one of two ways:
+
+| | **Run with...** | **Automate as...** |
+|---|---|---|
+| What it is | One command the file is passed to, e.g. `python3` | Any number of system commands, one per line, run top to bottom |
+| Good for | Scripts: Python, Bash, PHP, Perl, Ruby, Lua, QB64... | Compiling, `make`, running, copying, deploying: anything your system can do |
+| Results | The **Error Screen**: output and errors (errors in red), and the exit code | The **Info** window: each command's output, OK or FAILED, and an overall SUCCESS or FAILED |
+
+If nothing is set up for the current language, F5 asks which one you'd like. Change it any
+time with **Options › Run with...** or **Options › Automate as...** (each has a Remove button).
+
+In both, `%current_filename%` is the file's full path, `%current_dir%` its folder and
+`%current_name%` its name without folder or extension. They're quoted for you, so names with
+spaces work. "Run with" adds the file to the end of the command unless you place
+`%current_filename%` yourself. For example, Automate as for C:
+
+```sh
+# build, run, keep a copy
+gcc -Wall %current_filename% -o %current_name%
+./%current_name%
+cp %current_name% ~/bin/
+```
+
+- Commands run with `/bin/sh` in the file's folder, **in the background**: BlitzPad stays
+  responsive, output appears as it arrives, and **Stop** ends a run.
+- **Unsaved changes are saved first**, because the command works on the file on disk. A new,
+  never-saved file asks for a name first.
+- Automate as stops at the first failing command unless you untick that option. Lines
+  starting with `#` are notes.
+- Settings are saved per language in `[run-<language>]` of preferences.ini, and F5 can be
+  rebound in `[shortcuts]` (`options.run`).
 
 ## 🌐 Supported languages
 
@@ -355,7 +393,7 @@ CP437), BlitzPad tells you how many and lets you save as UTF-8 instead.
 
 ## 🧪 Beta status & road to 1.0
 
-**0.23 is feature-complete for the beta.** Every item from the original plan except
+**0.24 is feature-complete for the beta.** Every item from the original plan except
 inactive-tab memory saving is in, and it has automated tests for search, Save Compressed, language detection and encodings.
 Before calling it **Build 1.0**, BlitzPad goes through a dedicated **QA pass**:
 
@@ -401,9 +439,9 @@ Release zips have no wrapping folder: their contents *are* the repository root.
 
 ```sh
 cd ~/path/to/your/blitzpad-repo
-unzip -o ~/Downloads/blitzpad-0.23.zip   # -o overwrites older files
+unzip -o ~/Downloads/blitzpad-0.24.zip   # -o overwrites older files
 git add -A
-git commit -m "BlitzPad 0.23"
+git commit -m "BlitzPad 0.24"
 git push
 ```
 

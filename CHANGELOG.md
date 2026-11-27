@@ -5,6 +5,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 versions follow [Semantic Versioning](https://semver.org/). Every release zip bumps
 the minor version (`package.sh` does this automatically).
 
+## [0.24.0] - 2026-11-27 (beta)
+
+### Added
+- **Options › Run (F5)** runs the current file. It is set up per language, one of two ways:
+  - **Options › Run with...**: one command the file is passed to (for example `python3`).
+    Output and errors (in red) appear in the **Error Screen**, with the exit code.
+  - **Options › Automate as...**: any number of system commands, one per line, run in order
+    (compile, `make`, run, copy...). The **Info** window shows each command's output and
+    result, and an overall SUCCESS or FAILED. It stops at the first failure unless you
+    untick that option; lines starting with `#` are notes.
+  - `%current_filename%`, `%current_dir%` and `%current_name%` are replaced (shell-quoted)
+    in both. Run with adds the file to the end when you don't place it yourself.
+  - If nothing is set up for the language, F5 asks which way to set it up. Both dialogs
+    suggest a starting command for common languages and have a Remove button.
+- Runs happen in the background (`/bin/sh` in the file's folder), so the editor never
+  freezes; output streams in live, **Stop** ends a run, and closing the window stops it.
+- The file is **saved before running** if it has unsaved changes; a never-saved file asks
+  for a name first.
+- Settings live in `[run-<language>]` in preferences.ini (`mode`, `run-with`, `automate`,
+  `automate-stop-on-error`). F5 can be rebound as `options.run` in `[shortcuts]`.
+- A `run` test (ctest): quoting, placeholders, per-language settings, and real runs
+  (success, failure with exit code, stop-on-error on and off, file names with spaces and
+  quotes).
+
 ## [0.23.0] - 2026-11-27 (beta)
 
 ### Added
