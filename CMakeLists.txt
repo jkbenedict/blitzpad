@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 # The product version lives here only. package.sh bumps it for every new zip.
-project(blitzpad VERSION 0.18.0 LANGUAGES CXX)
+project(blitzpad VERSION 0.22.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -58,6 +58,8 @@ add_executable(blitzpad
   src/mainwindow.h
   src/editor.cpp
   src/editor.h
+  src/smartindent.cpp
+  src/smartindent.h
   src/languages.cpp
   src/languages.h
   src/search.cpp
@@ -114,3 +116,7 @@ add_test(NAME languages COMMAND languages_test)
 add_executable(encodings_test tests/encodings_test.cpp src/encodings.cpp src/encodings.h)
 target_link_libraries(encodings_test PRIVATE Qt6::Core)
 add_test(NAME encodings COMMAND encodings_test)
+add_executable(smartindent_test tests/smartindent_test.cpp src/smartindent.cpp src/smartindent.h)
+target_include_directories(smartindent_test PRIVATE ${QSCI_INCLUDE_DIR})
+target_link_libraries(smartindent_test PRIVATE Qt6::Widgets ${QSCI_LIBRARY})
+add_test(NAME smartindent COMMAND smartindent_test)

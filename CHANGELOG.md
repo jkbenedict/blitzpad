@@ -5,6 +5,47 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 versions follow [Semantic Versioning](https://semver.org/). Every release zip bumps
 the minor version (`package.sh` does this automatically).
 
+## [0.22.0] - 2026-11-27 (beta)
+
+### Added
+- README: a **"Thank you to Them Crooked Vultures"** section, with links to "Reptiles" and
+  their self-titled 2009 album on Spotify, Apple Music, Shazam, YouTube Music, Qobuz and
+  Last.fm.
+
+## [0.21.0] - 2026-11-27 (beta)
+
+### Added
+- **Smart auto-indent on Enter** (with `auto-indent = true` in `[editor]`, the default):
+  - **Your tabs are kept.** If you indented a line with the Tab key, Enter carries that
+    indentation onto the next line as tabs, even when `use-tabs` is off (before, it was
+    turned into spaces).
+  - **A raw Enter ends the indent.** When Enter has just indented a new line and you
+    press Enter again without typing anything there, the generated tabs are removed: the
+    blank line is left truly empty (no stray tab), and the next line starts at column 0.
+    One Ctrl+Z undoes it. Anything you type on the line, including your own Tab, keeps
+    the normal behaviour.
+  - Works for space indentation the same way.
+- A `smartindent` test (ctest) covering tabs kept, raw Enter, typed tabs, spaces, undo
+  and auto-indent off.
+
+### Changed
+- README and MANIFEST.md: BlitzPad is tested on **Debian-based** (Zorin OS 18) and
+  **RHEL-based** (AlmaLinux 9 / 10) systems.
+
+## [0.20.0] - 2026-11-27 (beta)
+
+### Changed
+- README: BlitzPad is shown as tested on **AlmaLinux 9 / 10** (RHEL family) as well as
+  Zorin OS 18, with badges, the beta notice and the 1.0 checklist updated. Rocky Linux,
+  RHEL, CentOS Stream and Oracle Linux are listed as expected to work, matching MANIFEST.md.
+- README: a new **"On AlmaLinux and other RHEL-based systems"** section with both ways to
+  install there: `install.sh`, or `packaging/build-rpm.sh` then `sudo dnf install`.
+
+## [0.19.0] - 2026-11-27 (beta)
+
+### Changed
+- README: the icon at the top now uses `data/icons/blitzpad-32.png`, shown at its real size.
+
 ## [0.18.0] - 2026-11-27 (beta)
 
 ### Added

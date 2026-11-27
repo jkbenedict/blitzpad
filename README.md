@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="data/icons/blitzpad-256.png" width="112" alt="BlitzPad icon">
+<img src="data/icons/blitzpad-32.png" width="32" height="32" alt="BlitzPad icon">
 
 # BlitzPad
 
@@ -8,9 +8,11 @@
 
 *"I was tired of a slow TextEditor, so I worked fast for faster work, later!"*
 
-![Version](https://img.shields.io/badge/version-0.18.0-2b6cf0?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.22.0-2b6cf0?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-BETA-ffb300?style=for-the-badge)
 ![Next](https://img.shields.io/badge/next-1.0%20QA-16328f?style=for-the-badge)
+![Tested on Zorin OS](https://img.shields.io/badge/tested-Zorin%20OS%2018-15a6f0?style=for-the-badge&logo=zorin&logoColor=white)
+![Tested on AlmaLinux](https://img.shields.io/badge/tested-AlmaLinux%209%20%2F%2010-0f4266?style=for-the-badge&logo=almalinux&logoColor=white)
 
 ![Platform](https://img.shields.io/badge/platform-Linux-333?style=flat-square&logo=linux&logoColor=white)
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat-square&logo=cplusplus&logoColor=white)
@@ -31,8 +33,10 @@
 ---
 
 > [!IMPORTANT]
-> **This is the BlitzPad beta (0.18).** Every feature planned for the first release is in
-> and covered by automated tests on Ubuntu 24.04 / Zorin OS 18. **Next up: a full QA pass
+> **This is the BlitzPad beta (0.22).** Every feature planned for the first release is in
+> and covered by automated tests. It is tested on **Zorin OS 18** (Debian / Ubuntu family) and
+> **AlmaLinux 9 / 10** (RHEL family), so it has been tested on both Debian-based and
+> RHEL-based systems, with native `.deb` and `.rpm` packages. **Next up: a full QA pass
 > across distributions and desktops, then Build 1.0.** See
 > [Beta status & road to 1.0](#-beta-status--road-to-10), and please
 > [report anything odd](#-help-test-the-beta).
@@ -64,6 +68,9 @@ the same editing engine Notepad++ is built on. There's no Electron and no web vi
 - Line numbers, code folding, brace matching (**unmatched braces glow red**)
 - Multiple cursors, Alt+drag column selection
 - Duplicate line (Ctrl+D), toggle comment (Ctrl+Q), word wrap, zoom
+- **Smart auto-indent**: indent with Tab and Enter keeps your tabs on the next line;
+  press Enter again on that untouched indented line and the indent is dropped, so the
+  blank line has no stray tab and the next line starts at the left edge
 - **59 character encodings**: UTF-8/16, DOS and terminal code pages (CP437, CP850,
   CP866, KOI8-R…), Windows, ISO-8859 and East Asian ([list](#-character-encodings))
 - Keeps each file's encoding and line endings; saves are atomic
@@ -117,11 +124,41 @@ the same editing engine Notepad++ is built on. There's no Electron and no web vi
 ## 🚀 Install
 
 ```sh
-unzip blitzpad-0.18.zip -d blitzpad && cd blitzpad
+unzip blitzpad-0.22.zip -d blitzpad && cd blitzpad
 ./install.sh
 ```
 
-On AlmaLinux, Rocky or RHEL, install `unzip` first if you don't have it: `sudo dnf install unzip`.
+This works the same on Zorin / Ubuntu / Debian (apt) and on AlmaLinux / Rocky / RHEL (dnf).
+
+### 🎩 On AlmaLinux and other RHEL-based systems
+
+BlitzPad is tested on **AlmaLinux 9 and 10**. Rocky Linux, RHEL, CentOS Stream and Oracle
+Linux 9+ use the same steps and are expected to work.
+
+**Option 1: install with `install.sh`** (builds from source, installs to `/usr/local`)
+
+```sh
+sudo dnf install unzip
+unzip blitzpad-0.22.zip -d blitzpad && cd blitzpad
+./install.sh
+```
+
+The installer lists what's missing, asks once, and then with `sudo`: enables the **EPEL**
+and **CRB** repositories, installs the compiler, CMake, Qt 6 and the rest with `dnf`, and
+builds QScintilla from source if EPEL doesn't have it.
+
+**Option 2: build and install the `.rpm`** (installs to `/usr`, managed by `dnf`)
+
+```sh
+cd blitzpad                                    # the unzipped release
+bash packaging/build-rpm.sh                    # writes blitzpad-0.22.0-1.el9.x86_64.rpm next to the folder
+sudo dnf install ../blitzpad-0.22.0-1.el9.*.rpm
+```
+
+`build-rpm.sh` offers to install `rpm-build`, the build tools and the CRB repository with
+`sudo`. The finished `.rpm` has QScintilla built in, so installing it needs only Qt 6 from
+AppStream, not EPEL. On AlmaLinux 10 the file name ends in `.el10.x86_64.rpm`. Remove it
+with `sudo dnf remove blitzpad`.
 
 That's it. `install.sh`:
 
@@ -175,20 +212,23 @@ Each beta also comes as native packages, which install to `/usr` and pull in the
 dependencies automatically:
 
 ```sh
-sudo apt install ./blitzpad_0.18.0-1_amd64.deb        # Zorin OS 18, Ubuntu 24.04+, Mint 22+, Debian 13
-sudo dnf install ./blitzpad-0.18.0-1.el9.x86_64.rpm   # AlmaLinux / Rocky / RHEL 9
+sudo apt install ./blitzpad_0.22.0-1_amd64.deb        # Zorin OS 18, Ubuntu 24.04+, Mint 22+, Debian 13
+sudo dnf install ./blitzpad-0.22.0-1.el9.x86_64.rpm   # AlmaLinux / Rocky / RHEL 9
 ```
 
 The `.deb` is ready to install. For AlmaLinux, the beta ships the source package
-(`blitzpad-0.18.0-1.src.rpm`): make the installable `.rpm` on your Alma machine with
+(`blitzpad-0.22.0-1.src.rpm`): make the installable `.rpm` on your Alma machine with
 `bash packaging/build-rpm.sh` from the unzipped release. It offers to install `rpm-build`,
 the build tools and the CRB repository with sudo, then writes the `.rpm` next to the
-folder. (`rpmbuild --rebuild blitzpad-0.18.0-1.src.rpm` works too, once the build tools
+folder. (`rpmbuild --rebuild blitzpad-0.22.0-1.src.rpm` works too, once the build tools
 are installed.) `bash packaging/build-deb.sh` makes the `.deb` the same way on Debian /
 Ubuntu / Zorin. Remove them with `sudo apt remove blitzpad` or
 `sudo dnf remove blitzpad`.
 
 ### Supported systems
+
+BlitzPad is **tested on Debian-based systems** (Zorin OS 18) **and RHEL-based systems**
+(AlmaLinux 9 / 10). The rest are expected to work and are part of the 1.0 QA pass.
 
 | System | Package manager | Beta status |
 |---|---|---|
@@ -307,11 +347,12 @@ CP437), BlitzPad tells you how many and lets you save as UTF-8 instead.
 
 ## 🧪 Beta status & road to 1.0
 
-**0.18 is feature-complete for the beta.** Every item from the original plan except
+**0.22 is feature-complete for the beta.** Every item from the original plan except
 inactive-tab memory saving is in, and it has automated tests for search, Save Compressed, language detection and encodings.
 Before calling it **Build 1.0**, BlitzPad goes through a dedicated **QA pass**:
 
-- [ ] **Distributions.** Install and use on Zorin 17 & 18, Ubuntu 22.04, Debian 12, Mint, Fedora, AlmaLinux 9 & 10, Arch, openSUSE
+- [x] **Tested distributions.** Zorin OS 18 (Debian / Ubuntu family) and AlmaLinux 9 & 10 (RHEL family)
+- [ ] **More distributions.** Zorin 17, Ubuntu 22.04, Debian 12, Mint, Fedora, Rocky Linux, RHEL, Arch, openSUSE
 - [ ] **Desktops.** GNOME (X11 and Wayland), KDE Plasma, Xfce, Cinnamon: icon, menu entry, dialogs, HiDPI
 - [ ] **Big & awkward files.** 100 MB+ files, very long lines, binary files, Latin-1 and CRLF round trips
 - [ ] **Find / Replace.** Regex edge cases, Replace All in All Open Tabs, undo
@@ -352,15 +393,31 @@ Release zips have no wrapping folder: their contents *are* the repository root.
 
 ```sh
 cd ~/path/to/your/blitzpad-repo
-unzip -o ~/Downloads/blitzpad-0.18.zip   # -o overwrites older files
+unzip -o ~/Downloads/blitzpad-0.22.zip   # -o overwrites older files
 git add -A
-git commit -m "BlitzPad 0.18"
+git commit -m "BlitzPad 0.22"
 git push
 ```
 
 Keep `README.md`, `CHANGELOG.md`, `data/` and `docs/` at the top level of the repo.
 The README's icon (`data/icons/`) and screenshots (`docs/screenshots/`) are linked with
 those relative paths.
+
+## 🦅 Thank you to Them Crooked Vultures
+
+BlitzPad was built to the sound of **Them Crooked Vultures**, and especially
+**"Reptiles"** from their self-titled 2009 album. Thank you for the soundtrack. 🎸
+
+Listen to "Reptiles" and the album *Them Crooked Vultures*:
+
+| Platform | Link |
+|---|---|
+| Spotify | [*Them Crooked Vultures* (album)](https://open.spotify.com/album/0Z6IBizcq7DLXpenjSHqF3) |
+| Apple Music | [Them Crooked Vultures](https://music.apple.com/artist/337312823) |
+| Shazam | ["Reptiles"](https://www.shazam.com/song/1237749865/reptiles) |
+| YouTube Music | [Search: "Reptiles"](https://music.youtube.com/search?q=Them+Crooked+Vultures+Reptiles) |
+| Qobuz | [*Them Crooked Vultures* (album)](https://www.qobuz.com/gb-en/album/them-crooked-vultures-them-crooked-vultures/msuyavxoook8b) |
+| Last.fm | ["Reptiles"](https://www.last.fm/music/Them+Crooked+Vultures/_/Reptiles) |
 
 ## 📄 License
 

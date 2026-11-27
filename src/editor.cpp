@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QFontDatabase>
+#include <QKeyEvent>
 #include <QSaveFile>
 #include <QStringDecoder>
 
@@ -59,6 +60,27 @@ void Editor::applyCommonSettings()
     // files open fast. Scintilla styles the rest lazily while idle.
     SendScintilla(SCI_SETIDLESTYLING, SC_IDLESTYLING_ALL);
     SendScintilla(SCI_SETLAYOUTCACHE, SC_CACHE_PAGE);
+}
+
+// Enter goes through SmartIndent: tab indentation the user typed is kept, and a
+// raw Enter on a line that Enter just indented drops that indentation.
+void Editor::keyPressEvent(QKeyEvent *e)
+{
+    const bool enter = (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter)
+        && (e->modifiers() & ~Qt::KeypadModifier) == Qt::NoModifier && !isReadOnly();
+    if (!enter) {
+        QsciScintilla::keyPressEvent(e);
+        return;
+    }
+    if (m_smartIndent.beforeEnter(this)) {
+        e->accept();
+        return;
+    }
+    const int line = int(SendScintilla(SCI_LINEFROMPOSITION, SendScintilla(SCI_GETCURRENTPOS)));
+    SendScintilla(SCI_BEGINUNDOACTION);
+    QsciScintilla::keyPressEvent(e);
+    m_smartIndent.afterEnter(this, line);
+    SendScintilla(SCI_ENDUNDOACTION);
 }
 
 void Editor::updateMarginWidth()

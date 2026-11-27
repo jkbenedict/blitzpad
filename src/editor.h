@@ -2,6 +2,8 @@
 
 #include <Qsci/qsciscintilla.h>
 
+#include "smartindent.h"
+
 // One open document. Wraps QScintilla and keeps track of its file,
 // language and line endings.
 class Editor : public QsciScintilla {
@@ -33,6 +35,9 @@ public:
     // Re-reads [editor] options and colours from preferences.ini.
     void reloadPreferences() { applyCommonSettings(); setLanguage(m_language); }
 
+protected:
+    void keyPressEvent(QKeyEvent *e) override;
+
 private:
     void applyCommonSettings();
     void updateMarginWidth();
@@ -43,4 +48,5 @@ private:
     bool m_encodingChanged = false;
     QString m_unknownExt;
     int m_lastLineDigits = 0;
+    SmartIndent m_smartIndent;
 };
