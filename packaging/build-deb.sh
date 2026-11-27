@@ -52,7 +52,7 @@ Section: editors
 Priority: optional
 Description: fast Notepad++-style text editor
  BlitzPad is a fast graphical text editor for Linux in the style of Notepad++:
- syntax colouring for 59 languages, regex find and replace, 59 encodings and
+ syntax colouring for 60 languages, regex find and replace, 59 encodings and
  code pages, and Save Compressed (7-Zip).
 EOF
 # Refresh the menu and icon caches after installing or removing.

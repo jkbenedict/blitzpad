@@ -5,6 +5,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 versions follow [Semantic Versioning](https://semver.org/). Every release zip bumps
 the minor version (`package.sh` does this automatically).
 
+## [0.23.0] - 2026-11-27 (beta)
+
+### Added
+- **QB64 / QBasic** syntax colouring for `.bas`, `.bi`, `.bm` and `.qb64` files (Language >
+  Programming > QB64 / QBasic). It colours QBasic keywords, QB64's `_`-prefixed statements
+  and functions, `$` metacommands (`$CONSOLE:ONLY`, `$IF`, and the older `'$INCLUDE:` /
+  `'$DYNAMIC` form), `'` and `REM` comments, strings, numbers (`&H`, `&O`, `&B`, exponents,
+  suffixed literals like `42%`), line numbers and labels, and type suffixes
+  (`` $ % %% & && ! # ## ~% ~& ` ``). Keywords are matched in any case, and `LEFT$` /
+  `_TRIM$` style names are coloured as one word. Toggle Comment uses `'`. Each style has a
+  row in Options > Grammar Colour Overrides.
+- A `qb64` test (ctest) for the colouring, and `.bas` / `.bi` / `.bm` detection in the
+  `languages` test.
+- README: QB64 in the Supported languages list, with a screenshot.
+
 ## [0.22.0] - 2026-11-27 (beta)
 
 ### Added

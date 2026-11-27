@@ -8,7 +8,7 @@
 
 *"I was tired of a slow TextEditor, so I worked fast for faster work, later!"*
 
-![Version](https://img.shields.io/badge/version-0.22.0-2b6cf0?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.23.0-2b6cf0?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-BETA-ffb300?style=for-the-badge)
 ![Next](https://img.shields.io/badge/next-1.0%20QA-16328f?style=for-the-badge)
 ![Tested on Zorin OS](https://img.shields.io/badge/tested-Zorin%20OS%2018-15a6f0?style=for-the-badge&logo=zorin&logoColor=white)
@@ -33,7 +33,7 @@
 ---
 
 > [!IMPORTANT]
-> **This is the BlitzPad beta (0.22).** Every feature planned for the first release is in
+> **This is the BlitzPad beta (0.23).** Every feature planned for the first release is in
 > and covered by automated tests. It is tested on **Zorin OS 18** (Debian / Ubuntu family) and
 > **AlmaLinux 9 / 10** (RHEL family), so it has been tested on both Debian-based and
 > RHEL-based systems, with native `.deb` and `.rpm` packages. **Next up: a full QA pass
@@ -62,7 +62,7 @@ the same editing engine Notepad++ is built on. There's no Electron and no web vi
 
 ### ✏️ Editing
 - Tabs: open many files at once, switch with Ctrl+Tab or Ctrl+PgUp/PgDn
-- Syntax colouring for **59 languages**, including PHP, C/C++, Python, Bash, Go, Rust,
+- Syntax colouring for **60 languages**, including PHP, QB64, C/C++, Python, Bash, Go, Rust,
   JavaScript/TypeScript, HTML/CSS and Markdown, each detected automatically
   ([full list](#-supported-languages))
 - Line numbers, code folding, brace matching (**unmatched braces glow red**)
@@ -124,7 +124,7 @@ the same editing engine Notepad++ is built on. There's no Electron and no web vi
 ## 🚀 Install
 
 ```sh
-unzip blitzpad-0.22.zip -d blitzpad && cd blitzpad
+unzip blitzpad-0.23.zip -d blitzpad && cd blitzpad
 ./install.sh
 ```
 
@@ -139,7 +139,7 @@ Linux 9+ use the same steps and are expected to work.
 
 ```sh
 sudo dnf install unzip
-unzip blitzpad-0.22.zip -d blitzpad && cd blitzpad
+unzip blitzpad-0.23.zip -d blitzpad && cd blitzpad
 ./install.sh
 ```
 
@@ -151,8 +151,8 @@ builds QScintilla from source if EPEL doesn't have it.
 
 ```sh
 cd blitzpad                                    # the unzipped release
-bash packaging/build-rpm.sh                    # writes blitzpad-0.22.0-1.el9.x86_64.rpm next to the folder
-sudo dnf install ../blitzpad-0.22.0-1.el9.*.rpm
+bash packaging/build-rpm.sh                    # writes blitzpad-0.23.0-1.el9.x86_64.rpm next to the folder
+sudo dnf install ../blitzpad-0.23.0-1.el9.*.rpm
 ```
 
 `build-rpm.sh` offers to install `rpm-build`, the build tools and the CRB repository with
@@ -212,15 +212,15 @@ Each beta also comes as native packages, which install to `/usr` and pull in the
 dependencies automatically:
 
 ```sh
-sudo apt install ./blitzpad_0.22.0-1_amd64.deb        # Zorin OS 18, Ubuntu 24.04+, Mint 22+, Debian 13
-sudo dnf install ./blitzpad-0.22.0-1.el9.x86_64.rpm   # AlmaLinux / Rocky / RHEL 9
+sudo apt install ./blitzpad_0.23.0-1_amd64.deb        # Zorin OS 18, Ubuntu 24.04+, Mint 22+, Debian 13
+sudo dnf install ./blitzpad-0.23.0-1.el9.x86_64.rpm   # AlmaLinux / Rocky / RHEL 9
 ```
 
 The `.deb` is ready to install. For AlmaLinux, the beta ships the source package
-(`blitzpad-0.22.0-1.src.rpm`): make the installable `.rpm` on your Alma machine with
+(`blitzpad-0.23.0-1.src.rpm`): make the installable `.rpm` on your Alma machine with
 `bash packaging/build-rpm.sh` from the unzipped release. It offers to install `rpm-build`,
 the build tools and the CRB repository with sudo, then writes the `.rpm` next to the
-folder. (`rpmbuild --rebuild blitzpad-0.22.0-1.src.rpm` works too, once the build tools
+folder. (`rpmbuild --rebuild blitzpad-0.23.0-1.src.rpm` works too, once the build tools
 are installed.) `bash packaging/build-deb.sh` makes the `.deb` the same way on Debian /
 Ubuntu / Zorin. Remove them with `sudo apt remove blitzpad` or
 `sudo dnf remove blitzpad`.
@@ -296,14 +296,14 @@ Edit it with **Options › Edit preferences.ini**, then **Options › Reload Pre
 
 ## 🌐 Supported languages
 
-BlitzPad colours **59 languages** out of the box. It picks the language from the file's
+BlitzPad colours **60 languages** out of the box. It picks the language from the file's
 extension, its name (`Makefile`, `Dockerfile`, `Gemfile`…) or its first line (`#!` lines
 such as `#!/usr/bin/env php`, `<?php`, `<?xml`, `<!DOCTYPE html>`, `%!PS`, `\documentclass`).
 You can always switch with the **Language** menu, which groups them like this:
 
 | Group | Languages (extensions) |
 |---|---|
-| **Programming** | C (`.c .h`), C++ (`.cpp .cc .cxx .hpp .ino`…), C# (`.cs`), D (`.d`), Dart (`.dart`), Fortran (`.f90 .f95 .f03 .f08`), Fortran 77 (`.f .for .f77`), Go (`.go`), Java (`.java`), Kotlin (`.kt .kts`), MATLAB (`.m`), Objective-C (`.mm`, or `.m` starting with `#import`), Octave (`#!` octave), Pascal (`.pas .pp .dpr .lpr`), PostScript (`.ps .eps`), POV-Ray (`.pov`), Rust (`.rs`), Scala (`.scala .sc`), SQL (`.sql`), Swift (`.swift`) |
+| **Programming** | C (`.c .h`), C++ (`.cpp .cc .cxx .hpp .ino`…), C# (`.cs`), D (`.d`), Dart (`.dart`), Fortran (`.f90 .f95 .f03 .f08`), Fortran 77 (`.f .for .f77`), Go (`.go`), Java (`.java`), Kotlin (`.kt .kts`), MATLAB (`.m`), Objective-C (`.mm`, or `.m` starting with `#import`), Octave (`#!` octave), Pascal (`.pas .pp .dpr .lpr`), PostScript (`.ps .eps`), **QB64 / QBasic** (`.bas .bi .bm`), POV-Ray (`.pov`), Rust (`.rs`), Scala (`.scala .sc`), SQL (`.sql`), Swift (`.swift`) |
 | **Scripting** | AviSynth (`.avs`), Bash/shell (`.sh .bash .zsh .ksh`, `.bashrc`, `PKGBUILD`), Batch (`.bat .cmd`), CoffeeScript (`.coffee`), Groovy (`.groovy .gradle`, `Jenkinsfile`), JavaScript (`.js .mjs .cjs .jsx`), Lua (`.lua`), Perl (`.pl .pm`), **PHP** (`.php .phtml .php3`–`.php8 .phps`), Python (`.py .pyw .pyi`), Ruby (`.rb .rake .gemspec`, `Gemfile`), Tcl (`.tcl .tk`), TypeScript (`.ts .tsx .mts .cts`) |
 | **Markup & Data** | CSS (`.css .scss .less`), EDIFACT (`.edi`), Gettext PO (`.po .pot`), HTML (`.html .htm .xhtml .vue .svelte .jsp .asp`), IDL (`.idl`), JSON (`.json .jsonc`), Markdown (`.md`), Protocol Buffers (`.proto`), TeX / LaTeX (`.tex .sty .cls .bib`), XML (`.xml .svg .xsl .plist .qrc`…), YAML (`.yml .yaml`) |
 | **Build & Config** | CMake (`CMakeLists.txt`, `.cmake`), Diff (`.diff .patch`), Dockerfile (`Dockerfile`, `Containerfile`), INI / Config (`.ini .conf .cfg .desktop .service .env`), Makefile (`Makefile`, `.mk`), TOML (`.toml`) |
@@ -316,6 +316,14 @@ PHP files are coloured as PHP mixed with HTML, so templates with `<?php … ?>` 
 `<?= … ?>` blocks look right in both parts.
 
 <img src="docs/screenshots/php.png" width="820" alt="A PHP file in BlitzPad with PHP and HTML colouring">
+
+**QB64 / QBasic** gets its own colouring: QBasic keywords, QB64's `_`-prefixed statements
+and functions (`_NEWIMAGE`, `_PRINTSTRING`, `_TRIM$`…), `$` metacommands (`$CONSOLE`,
+`'$INCLUDE:`), `'` and `REM` comments, strings, numbers including `&H` / `&O` / `&B`,
+line numbers and labels, and type suffixes (`` $ % %% & && ! # ## ~% ` ``). Keywords match
+in any case.
+
+<img src="docs/screenshots/qb64.png" width="820" alt="A QB64 program in BlitzPad with keywords, QB64 statements, metacommands and comments coloured">
 
 ## 🔤 Character encodings
 
@@ -347,7 +355,7 @@ CP437), BlitzPad tells you how many and lets you save as UTF-8 instead.
 
 ## 🧪 Beta status & road to 1.0
 
-**0.22 is feature-complete for the beta.** Every item from the original plan except
+**0.23 is feature-complete for the beta.** Every item from the original plan except
 inactive-tab memory saving is in, and it has automated tests for search, Save Compressed, language detection and encodings.
 Before calling it **Build 1.0**, BlitzPad goes through a dedicated **QA pass**:
 
@@ -393,9 +401,9 @@ Release zips have no wrapping folder: their contents *are* the repository root.
 
 ```sh
 cd ~/path/to/your/blitzpad-repo
-unzip -o ~/Downloads/blitzpad-0.22.zip   # -o overwrites older files
+unzip -o ~/Downloads/blitzpad-0.23.zip   # -o overwrites older files
 git add -A
-git commit -m "BlitzPad 0.22"
+git commit -m "BlitzPad 0.23"
 git push
 ```
 

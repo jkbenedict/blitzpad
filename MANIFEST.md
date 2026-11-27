@@ -9,7 +9,7 @@ Keep this file in step with `REQUIRED` / `RECOMMENDED` in `deps.sh`, the `Depend
 `Recommends` in `packaging/build-deb.sh`, and the `BuildRequires` / `Recommends` in
 `packaging/blitzpad.spec`.
 
-## Status (beta 0.22)
+## Status (beta 0.23)
 
 BlitzPad is **tested on Debian-based systems** (Zorin OS 18, apt / `.deb`) **and RHEL-based
 systems** (AlmaLinux 9 / 10, dnf / `.rpm`). Every other distribution below is expected to

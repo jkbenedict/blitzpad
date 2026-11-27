@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 # The product version lives here only. package.sh bumps it for every new zip.
-project(blitzpad VERSION 0.22.0 LANGUAGES CXX)
+project(blitzpad VERSION 0.23.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -62,6 +62,8 @@ add_executable(blitzpad
   src/smartindent.h
   src/languages.cpp
   src/languages.h
+  src/qb64lexer.cpp
+  src/qb64lexer.h
   src/search.cpp
   src/search.h
   src/finddialog.cpp
@@ -109,6 +111,7 @@ add_executable(compress_test tests/compress_test.cpp src/compress.cpp src/compre
 target_link_libraries(compress_test PRIVATE Qt6::Widgets)
 add_test(NAME compress COMMAND compress_test)
 add_executable(languages_test tests/languages_test.cpp src/languages.cpp src/languages.h
+               src/qb64lexer.cpp src/qb64lexer.h
                src/prefs.cpp src/prefs.h src/userlang.cpp src/userlang.h)
 target_include_directories(languages_test PRIVATE ${QSCI_INCLUDE_DIR})
 target_link_libraries(languages_test PRIVATE Qt6::Widgets ${QSCI_LIBRARY})
@@ -120,3 +123,7 @@ add_executable(smartindent_test tests/smartindent_test.cpp src/smartindent.cpp s
 target_include_directories(smartindent_test PRIVATE ${QSCI_INCLUDE_DIR})
 target_link_libraries(smartindent_test PRIVATE Qt6::Widgets ${QSCI_LIBRARY})
 add_test(NAME smartindent COMMAND smartindent_test)
+add_executable(qb64_test tests/qb64_test.cpp src/qb64lexer.cpp src/qb64lexer.h src/prefs.cpp src/prefs.h)
+target_include_directories(qb64_test PRIVATE ${QSCI_INCLUDE_DIR})
+target_link_libraries(qb64_test PRIVATE Qt6::Widgets ${QSCI_LIBRARY})
+add_test(NAME qb64 COMMAND qb64_test)

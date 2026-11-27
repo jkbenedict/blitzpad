@@ -44,6 +44,10 @@ int main(int argc, char **argv)
     expect("/x/a.asm", "", "Assembly (NASM)");
     expect("/x/a.toml", "", "TOML");
     expect("/x/a.f90", "", "Fortran");
+    expect("/x/game.bas", "", "QB64 / QBasic");
+    expect("/x/GAME.BAS", "", "QB64 / QBasic");
+    expect("/x/lib.bi", "", "QB64 / QBasic");
+    expect("/x/lib.bm", "", "QB64 / QBasic");
     expect("/x/a.m", "% comment", "MATLAB");
     expect("/x/a.m", "#import <Foundation/Foundation.h>", "Objective-C");
     // By file name

@@ -1,4 +1,5 @@
 #include "languages.h"
+#include "qb64lexer.h"
 #include "prefs.h"
 #include "userlang.h"
 
@@ -193,6 +194,7 @@ const QList<BuiltIn> &builtinTable()
         {{"Rust", {"rs"}, {}, "//", false, P}, cfamily("Rust", kRust, kRustT)},
         {{"Scala", {"scala", "sc"}, {}, "//", false, P}, cfamily("Scala", kScala, kScalaT, false, true)},
         {{"SQL", {"sql"}, {}, "--", false, P}, make<QsciLexerSQL>()},
+        {{"QB64 / QBasic", {"bas", "bi", "bm", "qb64"}, {}, "'", false, P}, make<QB64Lexer>()},
         {{"Swift", {"swift"}, {}, "//", false, P}, cfamily("Swift", kSwift, kSwiftT, false, true)},
 
         // Scripting
